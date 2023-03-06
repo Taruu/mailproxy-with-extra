@@ -100,4 +100,8 @@ ENV/
 # mypy
 .mypy_cache/
 
+# Project files
 config.ini
+
+#IDE files
+.vscode

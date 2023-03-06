@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 aiosmtpd = ">=1.1"
+python-systemd = "*"
 
 [dev-packages]
 

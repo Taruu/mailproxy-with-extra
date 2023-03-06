@@ -1,9 +1,12 @@
 # mailproxy
+
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 mailproxy is a simple SMTP proxy. It receives emails through an unencrypted, unauthenticated SMTP interface and retransmits them through a remote SMTP server that requires modern features such as encryption (SSL, STARTTLS) and/or authentication (SMTP AUTH). mailproxy is primarily useful for enabling email functionality in legacy software that only supports plain SMTP.
 
 # Requirements
-* Python 3.5+
-* [aiosmtpd 1.1+](https://aiosmtpd.readthedocs.io)
+![GitHub Pipenv locked Python version](https://img.shields.io/github/pipenv/locked/python-version/Taruu/mailproxy-with-utils)
+![GitHub Pipenv locked dependency version](https://img.shields.io/github/pipenv/locked/dependency-version/Taruu/mailproxy-with-utils/aiosmtpd)
 
 
 # Usage

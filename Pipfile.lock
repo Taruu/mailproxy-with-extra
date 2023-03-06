@@ -22,7 +22,7 @@
                 "sha256:f9243b7dfe00aaf567da8728d891752426b51392174a34d2cf5c18053b63dcbc"
             ],
             "index": "pypi",
-            "version": "==1.4.4.post2"
+            "version": ">=1.1"
         },
         "atpublic": {
             "hashes": [
@@ -30,7 +30,7 @@
                 "sha256:37f714748e77b8a7b34d59b7b485fd452a0d5906be52cb1bd28d29a2bd84f295"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==3.1.1"
+            "version": ">=3.1.1"
         },
         "attrs": {
             "hashes": [
@@ -38,7 +38,7 @@
                 "sha256:c9227bfc2f01993c03f68db37d1d15c9690188323c067c641f1a35ca58185f99"
             ],
             "markers": "python_version >= '3.6'",
-            "version": "==22.2.0"
+            "version": ">=22.2.0"
         }
     },
     "develop": {}

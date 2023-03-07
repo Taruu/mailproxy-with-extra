@@ -5,15 +5,9 @@
 mailproxy is a simple SMTP proxy. It receives emails through an unencrypted, unauthenticated SMTP interface and retransmits them through a remote SMTP server that requires modern features such as encryption (SSL, STARTTLS) and/or authentication (SMTP AUTH). mailproxy is primarily useful for enabling email functionality in legacy software that only supports plain SMTP.
 
 # Requirements
-<<<<<<< HEAD
 ![GitHub Pipenv locked Python version](https://img.shields.io/github/pipenv/locked/python-version/Taruu/mailproxy-with-utils)
 ![GitHub Pipenv locked dependency version](https://img.shields.io/github/pipenv/locked/dependency-version/Taruu/mailproxy-with-utils/aiosmtpd)
-![GitHub Pipenv locked dependency version](https://img.shields.io/github/pipenv/locked/dependency-version/Taruu/mailproxy-with-utils/[python-systemd])
-=======
-[![GitHub Pipenv locked Python version](https://img.shields.io/github/pipenv/locked/python-version/Taruu/mailproxy-with-utils)](https://www.python.org/downloads/)
-[![GitHub Pipenv locked dependency version](https://img.shields.io/github/pipenv/locked/dependency-version/Taruu/mailproxy-with-utils/aiosmtpd)](https://pypi.org/project/aiosmtpd/)
-
->>>>>>> 1facac6090c53d9d540d7053f7fe56059e23941a
+![GitHub Pipenv locked dependency version](https://img.shields.io/github/pipenv/locked/dependency-version/Taruu/mailproxy-with-utils/python-systemd)
 
 # Usage
 1. Create a config file (see below).

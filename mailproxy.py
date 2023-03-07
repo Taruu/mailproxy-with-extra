@@ -7,9 +7,12 @@ import sys
 from time import sleep
 
 from aiosmtpd.controller import Controller
+from systemd import journal
 
 __version__ = "1.0.2"
 
+systemd_log = logging.getLogger(__name__)
+systemd_log.addHandler(journal.JournalHandler(SYSLOG_IDENTIFIER=__name__))
 
 class MailProxyHandler:
     def __init__(self, host, port=0, auth=None, use_ssl=False, starttls=False):
@@ -43,6 +46,7 @@ class MailProxyHandler:
                 s.quit()
         except (OSError, smtplib.SMTPException) as e:
             logging.exception("got %s", e.__class__)
+            systemd_log.exception("got %s", e.__class__)
             # All recipients were refused. If the exception had an associated
             # error code, use it.  Otherwise, fake it with a SMTP 554 status code.
             errcode = getattr(e, "smtp_code", 554)
@@ -54,12 +58,14 @@ class MailProxyHandler:
             refused = self._deliver(envelope)
         except smtplib.SMTPRecipientsRefused as e:
             logging.info("Got SMTPRecipientsRefused: %s", refused)
+            systemd_log.info("Got SMTPRecipientsRefused: %s", refused)
             return "553 Recipients refused {}".format(" ".join(refused.keys()))
         except smtplib.SMTPResponseException as e:
             return "{} {}".format(e.smtp_code, e.smtp_error)
         else:
             if refused:
                 logging.info("Recipients refused: %s", refused)
+                systemd_log.info("Recipients refused: %s", refused)
             return "250 OK"
 
 
@@ -94,6 +100,11 @@ if __name__ == "__main__":
         hostname=config.get("local", "host", fallback="127.0.0.1"),
         port=config.getint("local", "port", fallback=25),
     )
-    controller.start()
-    while controller.loop.is_running():
-        sleep(0.2)
+    try:
+        controller.start()
+        logging.info("Mail proxy started.")
+        systemd_log.info("Mail proxy started.")
+        while controller.loop.is_running():
+            sleep(1)
+    except KeyboardInterrupt:
+            controller.stop()

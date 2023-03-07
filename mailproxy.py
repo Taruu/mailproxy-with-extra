@@ -108,3 +108,4 @@ if __name__ == "__main__":
             sleep(1)
     except KeyboardInterrupt:
             controller.stop()
+            systemd_log.warning("Mail proxy stoped")

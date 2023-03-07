@@ -17,7 +17,7 @@ systemd_log.addHandler(journal.JournalHandler(SYSLOG_IDENTIFIER=__name__))
 
 class UTF8Controller(Controller):
     def factory(self):
-        return SMTPServer(self.handler, decode_data=True)
+        return SMTPServer(self.handler, decode_data=True, enable_SMTPUTF8=True)
 
 class MailProxyHandler:
     def __init__(self, host, port=0, auth=None, use_ssl=False, starttls=False):

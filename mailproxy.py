@@ -7,12 +7,17 @@ import sys
 from time import sleep
 
 from aiosmtpd.controller import Controller
+from aiosmtpd.smtp import SMTP as SMTPServer
 from systemd import journal
 
 __version__ = "1.0.2"
 
 systemd_log = logging.getLogger(__name__)
 systemd_log.addHandler(journal.JournalHandler(SYSLOG_IDENTIFIER=__name__))
+
+class UTF8Controller(Controller):
+    def factory(self):
+        return SMTPServer(self.handler, decode_data=True)
 
 class MailProxyHandler:
     def __init__(self, host, port=0, auth=None, use_ssl=False, starttls=False):
@@ -88,7 +93,7 @@ if __name__ == "__main__":
     else:
         auth = None
 
-    controller = Controller(
+    controller = UTF8Controller(
         MailProxyHandler(
             host=config.get("remote", "host"),
             port=config.getint("remote", "port", fallback=25),
@@ -107,4 +112,4 @@ if __name__ == "__main__":
             sleep(1)
     except KeyboardInterrupt:
             controller.stop()
-            systemd_log.warning("Mail proxy stoped")
+            systemd_log.warning("Mail proxy stopped")

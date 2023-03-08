@@ -1,11 +1,11 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ff31cf31bee211e37e1a33be63527e80a5c8e6ceef3f69676c8c98bef01f4310"
+            "sha256": "ca6689e6efe7af7c5ee2c0701c11a44123114e17cf3502c03be2c636fcb85f4c"
         },
         "pipfile-spec": 6,
         "requires": {
-            "python_version": ">=3.7"
+            "python_version": "3.10"
         },
         "sources": [
             {
@@ -40,12 +40,20 @@
             "markers": "python_version >= '3.6'",
             "version": "==22.2.0"
         },
-        "python-systemd": {
+        "ctyped": {
             "hashes": [
-                "sha256:c01352a24518a6d89f90ceb94e384b0ef0385ea5b3b2d6963f8262d9c00f2fc7"
+                "sha256:0297a526c53948df4d6a0411f2054df545c1f4a0d92172d1921e48ef5ea5b34f",
+                "sha256:e1c179d27a0d9fe8649485b34c67e00eb30e2c4fa149bd2a6cc5de489def4b7b"
+            ],
+            "version": "==0.8.0"
+        },
+        "systemd-logging": {
+            "hashes": [
+                "sha256:991eca9247691680ad5dd61da34b10f2b58441b26c043fc76186cad69c634030",
+                "sha256:a26f70dbe03658d7a90d2d041db12a6b1ad7f41a6fd2f0fb357a989054ae2468"
             ],
             "index": "pypi",
-            "version": "==0.0.9"
+            "version": "==1.0.1"
         }
     },
     "develop": {}

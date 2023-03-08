@@ -1,3 +1,0 @@
-aiosmtpd>=1.1
-atpublic>=3.1.1 ; python_version >= '3.7'
-attrs>=22.2.0 ; python_version >= '3.6'

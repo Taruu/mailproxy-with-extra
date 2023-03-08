@@ -4,20 +4,23 @@ import logging
 import os
 import smtplib
 import sys
-from time import sleep
+import time
 
 from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import SMTP as SMTPServer
-from systemd import journal
 
-__version__ = "1.0.2"
+import puglogger
 
-systemd_log = logging.getLogger(__name__)
-systemd_log.addHandler(journal.JournalHandler(SYSLOG_IDENTIFIER=__name__))
+logFile = "pugmailproxy.log"
+logSize = 1000000
+logCount = 10
+logLevel = logging.INFO
+
 
 class UTF8Controller(Controller):
     def factory(self):
         return SMTPServer(self.handler, decode_data=True, enable_SMTPUTF8=True)
+
 
 class MailProxyHandler:
     def __init__(self, host, port=0, auth=None, use_ssl=False, starttls=False):
@@ -29,7 +32,6 @@ class MailProxyHandler:
         self._use_ssl = use_ssl
         self._starttls = starttls
 
-    # adapted from https://github.com/aio-libs/aiosmtpd/blob/master/aiosmtpd/handlers.py
     def _deliver(self, envelope):
         refused = {}
         try:
@@ -49,8 +51,7 @@ class MailProxyHandler:
             finally:
                 s.quit()
         except (OSError, smtplib.SMTPException) as e:
-            logging.exception("got %s", e.__class__)
-            systemd_log.exception("got %s", e.__class__)
+            puglog.logerr("got %s", e.__class__)
             # All recipients were refused. If the exception had an associated
             # error code, use it.  Otherwise, fake it with a SMTP 554 status code.
             errcode = getattr(e, "smtp_code", 554)
@@ -61,19 +62,22 @@ class MailProxyHandler:
         try:
             refused = self._deliver(envelope)
         except smtplib.SMTPRecipientsRefused as e:
-            logging.info("Got SMTPRecipientsRefused: %s", refused)
-            systemd_log.info("Got SMTPRecipientsRefused: %s", refused)
+            puglog.log("Got SMTPRecipientsRefused: %s", refused)
             return "553 Recipients refused {}".format(" ".join(refused.keys()))
         except smtplib.SMTPResponseException as e:
             return "{} {}".format(e.smtp_code, e.smtp_error)
         else:
             if refused:
-                logging.info("Recipients refused: %s", refused)
-                systemd_log.info("Recipients refused: %s", refused)
+                puglog.log("Recipients refused: %s", refused)
             return "250 OK"
 
 
 if __name__ == "__main__":
+
+    puglog = puglogger.Logging(
+        logFile=logFile, logSize=logSize, logCount=logCount, logLevel=logCount
+    )
+
     if len(sys.argv) == 2:
         config_path = sys.argv[1]
     else:
@@ -106,10 +110,18 @@ if __name__ == "__main__":
     )
     try:
         controller.start()
-        logging.info("Mail proxy started.")
-        systemd_log.info("Mail proxy started.")
+        puglog.log(
+            "Mail proxy starting on port:{}".format(config.getint("local", "port"))
+        )
         while controller.loop.is_running():
-            sleep(1)
+            time.sleep(1)
     except KeyboardInterrupt:
-            controller.stop()
-            systemd_log.warning("Mail proxy stopped")
+        controller.stop()
+        puglog.logwarn("Mail proxy stopped by user")
+    except:
+        puglog.logerr(
+            "Caught unknown exception: "
+            + str(sys.exc_info()[0])
+            + ": "
+            + str(sys.exc_info()[1])
+        )

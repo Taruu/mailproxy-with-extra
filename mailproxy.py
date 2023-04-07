@@ -13,11 +13,11 @@ from aiosmtpd.smtp import SMTP as SMTPServer
 
 import puglogger
 
-logging_config: Dict[str, Union[str, int, bool]] = {
+logging_config: Dict[str, Union[str, int]] = {
     "log_file": "pugmailproxy.log",
     "log_size": 1000000,
     "log_count": 10,
-    "log_level": logging.INFO,
+    "log_level": 20,
 }
 
 
@@ -36,7 +36,7 @@ class MailProxyHandler:
         self._use_ssl = use_ssl
         self._starttls = starttls
 
-    async def _deliver(self, envelope) -> dict[str, str]:
+    async def _deliver(self, envelope):
         refused = {}
         try:
             with smtplib.SMTP(self._host, self._port) as s:
@@ -80,17 +80,17 @@ class MailProxyHandler:
 
 if __name__ == "__main__":
     puglog = puglogger.Logging(
-        logFile=logging_config["log_file"],
-        logSize=logging_config["log_size"],
-        logCount=logging_config["log_count"],
-        logLevel=logging_config["log_level"],
+        logFile=str(logging_config["log_file"]),
+        logSize=int(logging_config["log_size"]),
+        logCount=int(logging_config["log_count"]),
+        logLevel=int(logging_config["log_level"]),
     )
 
     if len(sys.argv) == 2:
         config_path = sys.argv[1]
     else:
         config_path = Path(sys.path[0]) / "config.ini"
-    if not config_path.exists:
+    if not Path(config_path).exists():
         raise Exception(f"Config file not found: {config_path}")
 
     config = configparser.ConfigParser()
@@ -122,10 +122,10 @@ try:
         "Mail proxy starting on port:{}".format(config.getint("local", "port"))
     )
     while controller.loop.is_running():
-        asyncio.sleep(1)
+        time.sleep(1)
 except (KeyboardInterrupt, asyncio.CancelledError):
     controller.stop()
-    if hasattr(controller, '_cleanup'):
+    if callable(getattr(controller, '_cleanup', None)):
         controller._cleanup()
     puglog.logwarn("Mail proxy stopped by user")
 except Exception as e:

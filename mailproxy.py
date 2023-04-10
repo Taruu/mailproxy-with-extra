@@ -31,8 +31,8 @@ class MailProxyHandler:
         self._host = host
         self._port = port
         auth = auth or {}
-        self._auth_user = auth.get("user") if auth else None
-        self._auth_password = auth.get("password") if auth else None
+        self._auth_user = auth.get("_user") if auth else None
+        self._auth_password = auth.get("_password") if auth else None
         self._use_ssl = use_ssl
         self._starttls = starttls
 
@@ -99,27 +99,27 @@ if __name__ == "__main__":
     use_auth = config.getboolean("remote", "smtp_auth", fallback=False)
     if use_auth:
         auth = {
-            "user": config.get("remote", "smtp_auth_user"),
-            "password": config.get("remote", "smtp_auth_password"),
+            "_user": config.get("remote", "smtp_auth_user"),
+            "_password": config.get("remote", "smtp_auth_password"),
         }
     else:
         auth = None
 
 controller = UTF8Controller(
     MailProxyHandler(
-        host=config.get("remote", "host"),
-        port=config.getint("remote", "port", fallback=25),
+        host=config.get("remote", "_host"),
+        port=config.getint("remote", "_port", fallback=25),
         auth=auth,
-        use_ssl=config.getboolean("remote", "use_ssl", fallback=False),
+        use_ssl=config.getboolean("remote", "_use_ssl", fallback=False),
         starttls=config.getboolean("remote", "starttls", fallback=False),
     ),
-    hostname=config.get("local", "host", fallback="127.0.0.1"),
-    port=config.getint("local", "port", fallback=25),
+    hostname=config.get("local", "_host", fallback="127.0.0.1"),
+    port=config.getint("local", "_port", fallback=25),
 )
 try:
     controller.start()
     puglog.log(
-        "Mail proxy starting on port:{}".format(config.getint("local", "port"))
+        "Mail proxy starting on _port:{}".format(config.getint("local", "_port"))
     )
     while controller.loop.is_running():
         time.sleep(1)
@@ -127,6 +127,6 @@ except (KeyboardInterrupt, asyncio.CancelledError):
     controller.stop()
     if callable(getattr(controller, '_cleanup', None)):
         controller._cleanup()
-    puglog.logwarn("Mail proxy stopped by user")
+    puglog.logwarn("Mail proxy stopped by _user")
 except Exception as e:
     puglog.logerr(f"Caught unknown exception: {type(e).__name__}: {e}")

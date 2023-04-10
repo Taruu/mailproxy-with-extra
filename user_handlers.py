@@ -17,8 +17,7 @@ class SmtpHandler:
         self._use_ssl = use_ssl
         self._start_tls = False
 
-    def implement_email(self, mail_from: str, rcpt_tos,
-                        original_content: bytes):
+    def implement_email(self, rcpt_tos, original_content: bytes):
 
         # TODO all exception handler!!!
         # TODO test session place in self context
@@ -34,7 +33,7 @@ class SmtpHandler:
         if self._user and self._password:
             session.login(self._user, self._password)
         try:
-            session.sendmail(mail_from, rcpt_tos, original_content)
+            session.sendmail(self._user, rcpt_tos, original_content)
         except Exception as var_error:
             pass
         finally:
@@ -49,13 +48,36 @@ class ImapHandler:
     def __init__(self, host: str, port: int,
                  user: str, password: str,
                  use_ssl=False, ):
-        self.host = host
-        self.port = port
-        self.user = user
-        self.password = password
-        self.use_ssl = use_ssl
+        self._host = host
+        self._port = port
+        self._user = user
+        self._password = password
+        self._use_ssl = use_ssl
 
         pass
+
+    def implement_email(self, rcpt_tos, original_content: bytes):
+
+        # TODO all exception handler!!!
+        # TODO test session place in self context
+        if self._use_ssl:
+            session = imaplib.IMAP4_SSL(self._host, self._port)
+        else:
+            session = imaplib.IMAP4(self._host, self._port)
+        session.login(self._user, self._password)
+
+        #look how we get email content
+        new_message = Message()
+        new_message["From"] = self._user
+
+        try:
+
+        except Exception as var_error:
+            pass
+        finally:
+            # need only quit?
+            session.close()
+            session.quit()
 
 
 class MailUser:

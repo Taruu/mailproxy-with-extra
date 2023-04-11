@@ -10,8 +10,6 @@ from typing import List, Dict, TypedDict
 
 from user_handlers import SmtpHandler, ImapHandler, MailUser
 from aiosmtpd.controller import Controller
-
-
 class LocalSmtpHandler:
     def __init__(self):
         self.mail_users = {}
@@ -51,7 +49,7 @@ if __name__ == "__main__":
     else:
         config_path = Path(sys.path[0]) / "config.ini"
     if not Path(config_path).exists():
-        raise Exception(f"Config file not found: {config_path}")
+        raise OSError(f"Config file not found: {config_path}")
 
     config = configparser.ConfigParser()
     config.read(config_path)

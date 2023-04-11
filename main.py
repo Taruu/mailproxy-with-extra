@@ -2,6 +2,7 @@ import asyncio
 import configparser
 import logging
 import os
+from smtpd import SMTPServer
 import smtplib
 import sys
 from pathlib import Path
@@ -42,6 +43,10 @@ class LocalSmtpHandler:
         else:
             return "250 OK"
 
+#TODO Test it and make it work with real server and config file.
+class UTF8Controller(Controller): #Allow UTF8 in SMTP server
+    def factory(self):
+        return SMTPServer(self.handler, decode_data=True, enable_SMTPUTF8=True)
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
@@ -57,7 +62,7 @@ if __name__ == "__main__":
     localHandler = LocalSmtpHandler()
     localHandler.load_users(config)
 
-    controller = Controller(
+    controller = UTF8Controller(
         localHandler,
         hostname=config.get("local", "host"),
         port=config.getint("local", "port"),

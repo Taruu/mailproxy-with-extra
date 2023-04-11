@@ -15,16 +15,15 @@ from aiosmtpd.controller import Controller
 class LocalSmtpHandler:
     def __init__(self):
         self.mail_users = {}
-        pass
 
     def load_users(self, config: configparser.ConfigParser):
         list_emails = config.get("local", "email_list").split(",")
-        loaded_users = dict()
+        loaded_users = {}
         for email in list_emails:
             smtp_handler = SmtpHandler.load_smtp(config, email)
             imap_handler = ImapHandler.load_imap(config, email)
             temp_mail_user = MailUser(email, smtp_handler, imap_handler)
-            loaded_users.update({email: temp_mail_user})
+            loaded_users[email] = temp_mail_user
 
         self.mail_users = loaded_users
 
@@ -39,7 +38,7 @@ class LocalSmtpHandler:
             mail_user.imap_handler.implement_email(to, content)
 
         except smtplib.SMTPRecipientsRefused as e:
-            return "553 Recipients refused {}".format(" ".join(refused.keys()))
+            return f'553 Recipients refused {" ".join(refused.keys())}'
         except smtplib.SMTPResponseException as e:
             return f"{e.smtp_code} {e.smtp_error}"
         else:

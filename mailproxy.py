@@ -55,8 +55,8 @@ class MailProxyHandler:
             smtperrcode = getattr(e, "smtp_code", 554)
             smtperrmsg = getattr(e, "smtp_error", e.__class__.__name__.encode())
             errormsg = f"{smtperrcode} {smtperrmsg.decode()}"
-            raise smtplib.SMTPResponseException(smtperrcode, errormsg)
-        
+            raise smtplib.SMTPResponseException(smtperrcode, errormsg) from e
+
         except Exception as e:
             puglog.logerr(f"Unexpected error occurred during sendmail: {type(e).__name__}: {e}")
 
@@ -69,7 +69,7 @@ class MailProxyHandler:
             refused = await self._deliver(envelope)
         except smtplib.SMTPRecipientsRefused as e:
             puglog.log(f"Got SMTPRecipientsRefused: {refused}")
-            return "553 Recipients refused {}".format(" ".join(refused.keys()))
+            return f'553 Recipients refused {" ".join(refused.keys())}'
         except smtplib.SMTPResponseException as e:
             return f"{e.smtp_code} {e.smtp_error}"
         else:
@@ -91,13 +91,12 @@ if __name__ == "__main__":
     else:
         config_path = Path(sys.path[0]) / "config.ini"
     if not Path(config_path).exists():
-        raise Exception(f"Config file not found: {config_path}")
+        raise OSError(f"Config file not found: {config_path}")
 
     config = configparser.ConfigParser()
     config.read(config_path)
 
-    use_auth = config.getboolean("remote", "smtp_auth", fallback=False)
-    if use_auth:
+    if use_auth := config.getboolean("remote", "smtp_auth", fallback=False):
         auth = {
             "_user": config.get("remote", "smtp_auth_user"),
             "_password": config.get("remote", "smtp_auth_password"),
@@ -118,9 +117,7 @@ controller = UTF8Controller(
 )
 try:
     controller.start()
-    puglog.log(
-        "Mail proxy starting on _port:{}".format(config.getint("local", "_port"))
-    )
+    puglog.log(f'Mail proxy starting on _port:{config.getint("local", "_port")}')
     while controller.loop.is_running():
         time.sleep(1)
 except (KeyboardInterrupt, asyncio.CancelledError):

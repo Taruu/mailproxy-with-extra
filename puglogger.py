@@ -58,7 +58,7 @@ class Logging:
 
         try:
             if self.logLevel <= logging.INFO:
-                print("(" + time.ctime(time.time()) + ") " + msg)
+                print(f"({time.ctime(time.time())}) {msg}")
                 if self._isinit:
                     self.logger.info(msg)
         except:
@@ -69,7 +69,7 @@ class Logging:
 
         try:
             if self.logLevel <= logging.DEBUG:
-                print("DEBUG: (" + time.ctime(time.time()) + ") " + msg)
+                print(f"DEBUG: ({time.ctime(time.time())}) {msg}")
                 if self._isinit:
                     self.logger.debug(msg)
         except:
@@ -80,7 +80,7 @@ class Logging:
 
         try:
             if self.logLevel <= logging.ERROR:
-                print("ERROR: (" + time.ctime(time.time()) + ") " + msg)
+                print(f"ERROR: ({time.ctime(time.time())}) {msg}")
                 if self._isinit:
                     self.logger.error(msg)
         except:
@@ -91,7 +91,7 @@ class Logging:
 
         try:
             if self.logLevel <= logging.WARNING:
-                print("Warning: (" + time.ctime(time.time()) + ") " + msg)
+                print(f"Warning: ({time.ctime(time.time())}) {msg}")
                 if self._isinit:
                     self.logger.warning(msg)
         except:

@@ -12,6 +12,8 @@
 """	Wrapper class for the logging subsystem. """
 
 
+
+import contextlib
 import logging, logging.handlers, time
 from systemdlogging.toolbox import init_systemd_logging
 
@@ -56,43 +58,35 @@ class Logging:
     def log(self, msg):
         """Print a log message with level INFO."""
 
-        try:
+        with contextlib.suppress(Exception): #Use `contextlib`'s `suppress` method to silence an error
             if self.logLevel <= logging.INFO:
                 print(f"({time.ctime(time.time())}) {msg}")
                 if self._isinit:
                     self.logger.info(msg)
-        except:
-            pass
 
     def logdebug(self, msg):
         """Print a log message with level DEBUG."""
 
-        try:
+        with contextlib.suppress(Exception):
             if self.logLevel <= logging.DEBUG:
                 print(f"DEBUG: ({time.ctime(time.time())}) {msg}")
                 if self._isinit:
                     self.logger.debug(msg)
-        except:
-            pass
 
     def logerr(self, msg):
         """Print a log message with level ERROR."""
 
-        try:
+        with contextlib.suppress(Exception):
             if self.logLevel <= logging.ERROR:
                 print(f"ERROR: ({time.ctime(time.time())}) {msg}")
                 if self._isinit:
                     self.logger.error(msg)
-        except:
-            pass
 
     def logwarn(self, msg):
         """Print a log message with level WARNING."""
 
-        try:
+        with contextlib.suppress(Exception):
             if self.logLevel <= logging.WARNING:
                 print(f"Warning: ({time.ctime(time.time())}) {msg}")
                 if self._isinit:
                     self.logger.warning(msg)
-        except:
-            pass

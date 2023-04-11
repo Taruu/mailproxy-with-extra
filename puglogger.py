@@ -13,9 +13,12 @@
 
 
 
+
 import contextlib
 import logging, logging.handlers, time
-from systemdlogging.toolbox import init_systemd_logging
+from sys import platform
+if platform in ["linux", "linux2"]:
+    from systemdlogging.toolbox import init_systemd_logging
 
 
 class Logging:

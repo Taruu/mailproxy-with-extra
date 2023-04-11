@@ -18,7 +18,7 @@ class LocalSmtpHandler:
         pass
 
     def load_users(self, config: configparser.ConfigParser):
-        list_emails = config.get('local', 'email_list').split(',')
+        list_emails = config.get("local", "email_list").split(",")
         loaded_users = dict()
         for email in list_emails:
             smtp_handler = SmtpHandler.load_smtp(config, email)
@@ -31,7 +31,6 @@ class LocalSmtpHandler:
     async def handle_DATA(self, server, session, envelope):
         refused = {}
         try:
-
             email = envelope.mail_from
             to = envelope.rcpt_tos
             content = envelope.original_content
@@ -47,8 +46,7 @@ class LocalSmtpHandler:
             return "250 OK"
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     if len(sys.argv) == 2:
         config_path = sys.argv[1]
     else:
@@ -62,10 +60,11 @@ if __name__ == '__main__':
     localHandler = LocalSmtpHandler()
     localHandler.load_users(config)
 
-    controller = Controller(localHandler,
-                            hostname=config.get('local', 'host'),
-                            port=config.getint('local', 'port')
-                            )
+    controller = Controller(
+        localHandler,
+        hostname=config.get("local", "host"),
+        port=config.getint("local", "port"),
+    )
 
     controller.start()
     while controller.loop.is_running():

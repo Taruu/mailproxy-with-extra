@@ -91,11 +91,18 @@ if __name__ == "__main__":
     local_handler = LocalSmtpHandler()
     local_handler.load_users(config)
 
-    controller = UTF8Controller(
-        local_handler,
-        hostname=config.get("local", "host"),
-        port=config.getint("local", "port"),
-    )
+    if config.getboolean("local", "use_utf8") == True:
+        controller = UTF8Controller(
+            local_handler,
+            hostname=config.get("local", "host"),
+            port=config.getint("local", "port"),
+        )
+    else:
+        controller = Controller(
+            local_handler,
+            hostname=config.get('local', 'host'),
+            port=config.getint('local', 'port')
+        )
 
     controller.start()
     while controller.loop.is_running():

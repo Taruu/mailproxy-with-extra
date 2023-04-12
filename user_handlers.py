@@ -1,8 +1,6 @@
 import configparser
 import smtplib
 import imaplib
-from email.message import Message
-from email.contentmanager import ContentManager
 from time import time
 
 
@@ -27,7 +25,7 @@ class SmtpHandler:
 
     @staticmethod
     def load_smtp(config: configparser.ConfigParser, email: str):
-        # TODO checking
+        # TODO if config not correct or full message!
         key_value = f"smtp_{email}"
 
         host = config.get(key_value, "host")
@@ -37,6 +35,7 @@ class SmtpHandler:
         use_ssl = config.getboolean(key_value, "use_ssl")
         start_ssl = config.getboolean(key_value, "start_tls")
 
+        # TODO return None if config not correct or not exist
         return SmtpHandler(host, port, email, password, use_ssl, start_ssl)
 
     def implement_email(self, rcpt_tos, original_content: bytes):
@@ -78,12 +77,12 @@ class ImapHandler:
         self._port = port
         self._user = user
         self._password = password
-        print(use_ssl)
         self._use_ssl = use_ssl
         self._folder = folder
 
     @staticmethod
     def load_imap(config: configparser.ConfigParser, email: str):
+        # TODO if config not correct or full message!
         key_value = f"imap_{email}"
 
         host = config.get(key_value, "host")
@@ -93,6 +92,7 @@ class ImapHandler:
         use_ssl = config.getboolean(key_value, "use_ssl")
         folder = config.get(key_value, "folder").strip()
 
+        # TODO return None if config not correct or not exist
         return ImapHandler(host, port, email, password, use_ssl, folder)
 
     def implement_email(self, rcpt_tos, original_content: bytes):
@@ -102,15 +102,12 @@ class ImapHandler:
             session = imaplib.IMAP4_SSL(self._host, self._port)
         else:
             session = imaplib.IMAP4(self._host, self._port)
-        print(self._user, self._password)
+
         session.login(self._user, self._password)
 
-        print(session.list())
         value = original_content
-        print(value)
         # TODO folder to config
         res = session.append(self._folder, "", imaplib.Time2Internaldate(time()), value)
-        print("res", res)
         try:
             pass
         except Exception as var_error:

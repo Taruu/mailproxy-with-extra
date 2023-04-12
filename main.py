@@ -11,11 +11,20 @@ from typing import List, Dict, TypedDict
 
 from user_handlers import SmtpHandler, ImapHandler, MailUser
 from aiosmtpd.controller import Controller
+
 class LocalSmtpHandler:
+    """Class for handling SMTP requests from local server"""
+
     def __init__(self):
         self.mail_users = {}
 
     def load_users(self, config: configparser.ConfigParser):
+        """Loads users from config file
+
+        Args:
+            config (configparser.ConfigParser): Config file
+
+        """
         list_emails = config.get("local", "email_list").split(",")
         loaded_users = {}
         for email in list_emails:
@@ -24,26 +33,42 @@ class LocalSmtpHandler:
             temp_mail_user = MailUser(email, smtp_handler, imap_handler)
             loaded_users[email] = temp_mail_user
 
+
         self.mail_users = loaded_users
 
-    async def handle_DATA(self, server, session, envelope):
-        refused = {}
+    async def handle_data(self, server, session, envelope):
+        """Handle DATA command from SMTP server.
+
+        Args:
+            server (object): SMTP server object
+            session (object): SMTP session object
+            envelope (object): SMTP envelope object
+
+        Returns:
+            str: Response code
+
+        """
+        refused_recipients = {}
         try:
-            email = envelope.mail_from
-            to = envelope.rcpt_tos
+            sender = envelope.mail_from
+            recipients = envelope.rcpt_tos
             content = envelope.original_content
-            mail_user = self.mail_users.get(email)
-            mail_user.smtp_handler.implement_email(to, content)
-            mail_user.imap_handler.implement_email(to, content)
+
+            mail_user = self.mail_users.get(sender)
+            mail_user.smtp_handler.implement_email(recipients, content)
+            mail_user.imap_handler.implement_email(recipients, content)
 
         except smtplib.SMTPRecipientsRefused as e:
-            return f'553 Recipients refused {" ".join(refused.keys())}'
+            logging.error(f"Recipients refused: {' '.join(refused_recipients.keys())}")
+            return f'553 Recipients refused {"".join(refused_recipients.keys())}'
+    
         except smtplib.SMTPResponseException as e:
+            logging.error(f"SMTP response exception: {e.smtp_code} {e.smtp_error}")
             return f"{e.smtp_code} {e.smtp_error}"
         else:
+            logging.info("Successfully handled DATA command")
             return "250 OK"
 
-#TODO Test it and make it work with real server and config file.
 class UTF8Controller(Controller): #Allow UTF8 in SMTP server
     def factory(self):
         return SMTPServer(self.handler, decode_data=True, enable_SMTPUTF8=True)
@@ -59,11 +84,11 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read(config_path)
 
-    localHandler = LocalSmtpHandler()
-    localHandler.load_users(config)
+    local_handler = LocalSmtpHandler()
+    local_handler.load_users(config)
 
     controller = UTF8Controller(
-        localHandler,
+        local_handler,
         hostname=config.get("local", "host"),
         port=config.getint("local", "port"),
     )

@@ -1,16 +1,14 @@
-import asyncio
 import configparser
-import logging
-import os
 from smtpd import SMTPServer
 import smtplib
 import sys
 from pathlib import Path
 from time import sleep
-from typing import List, Dict, TypedDict
 
 from user_handlers import SmtpHandler, ImapHandler, MailUser
 from aiosmtpd.controller import Controller
+
+
 class LocalSmtpHandler:
     def __init__(self):
         self.mail_users = {}
@@ -33,6 +31,7 @@ class LocalSmtpHandler:
             to = envelope.rcpt_tos
             content = envelope.original_content
             mail_user = self.mail_users.get(email)
+            # TODO check - can we call the function
             mail_user.smtp_handler.implement_email(to, content)
             mail_user.imap_handler.implement_email(to, content)
 
@@ -43,10 +42,15 @@ class LocalSmtpHandler:
         else:
             return "250 OK"
 
-#TODO Test it and make it work with real server and config file.
-class UTF8Controller(Controller): #Allow UTF8 in SMTP server
+
+# TODO Test it and make it work with real server and config file.
+class UTF8Controller(Controller):
+    """Allow UTF8 in SMTP server"""
+
     def factory(self):
+        # TODO remoteaddr not filled!
         return SMTPServer(self.handler, decode_data=True, enable_SMTPUTF8=True)
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
@@ -70,4 +74,4 @@ if __name__ == "__main__":
 
     controller.start()
     while controller.loop.is_running():
-        sleep(0.2)
+        sleep(0.2)  # TODO Нам эта фигня точно нужна?

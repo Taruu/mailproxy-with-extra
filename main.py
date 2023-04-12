@@ -1,5 +1,5 @@
 import configparser
-from smtpd import SMTPServer
+import aiosmtpd
 import smtplib
 import sys
 from pathlib import Path
@@ -8,7 +8,7 @@ import logging
 
 from user_handlers import SmtpHandler, ImapHandler, MailUser
 from aiosmtpd.controller import Controller
-
+from aiosmtpd.smtp import SMTP as SMTPServer
 
 class LocalSmtpHandler:
     """Class for handling SMTP requests from local server"""
@@ -56,17 +56,15 @@ class LocalSmtpHandler:
             mail_user.smtp_handler.implement_email(emails_to, content)
             mail_user.imap_handler.implement_email(emails_to, content)
 
-        except smtplib.SMTPRecipientsRefused as e:
-            logging.error(
-                f"Recipients refused: {' '.join(refused_recipients.keys())}")
+        except aiosmtpd.SMTPRecipientsRefused as e:
+            logging.error(f"Recipients refused: {' '.join(refused_recipients.keys())}")
             return f'553 Recipients refused {"".join(refused_recipients.keys())}'
 
-        except smtplib.SMTPResponseException as e:
-            logging.error(
-                f"SMTP response exception: {e.smtp_code} {e.smtp_error}")
+        except aiosmtpd.SMTPResponseException as e:
+            logging.error(f"SMTP response exception: {e.smtp_code} {e.smtp_error}")
             return f"{e.smtp_code} {e.smtp_error}"
         else:
-            logging.info("Successfully handled DATA command")
+            logging.info(f"Successfully handled DATA command")
             return "250 OK"
 
 

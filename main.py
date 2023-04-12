@@ -9,6 +9,7 @@ import logging
 from user_handlers import SmtpHandler, ImapHandler, MailUser
 from aiosmtpd.controller import Controller
 
+
 class LocalSmtpHandler:
     """Class for handling SMTP requests from local server"""
 
@@ -30,7 +31,6 @@ class LocalSmtpHandler:
             temp_mail_user = MailUser(email, smtp_handler, imap_handler)
             loaded_users[email] = temp_mail_user
 
-
         self.mail_users = loaded_users
 
     async def handle_data(self, server, session, envelope):
@@ -45,22 +45,25 @@ class LocalSmtpHandler:
             str: Response code
 
         """
-        refused_recipients = {}
-        try:
-            sender = envelope.mail_from
-            recipients = envelope.rcpt_tos
-            content = envelope.original_content
 
-            mail_user = self.mail_users.get(sender)
-            mail_user.smtp_handler.implement_email(recipients, content)
-            mail_user.imap_handler.implement_email(recipients, content)
+        email_from = envelope.mail_from
+        emails_to = envelope.rcpt_tos
+        content = envelope.original_content
+        refused_recipients = {}
+
+        try:
+            mail_user = self.mail_users.get(email_from)
+            mail_user.smtp_handler.implement_email(emails_to, content)
+            mail_user.imap_handler.implement_email(emails_to, content)
 
         except smtplib.SMTPRecipientsRefused as e:
-            logging.error(f"Recipients refused: {' '.join(refused_recipients.keys())}")
+            logging.error(
+                f"Recipients refused: {' '.join(refused_recipients.keys())}")
             return f'553 Recipients refused {"".join(refused_recipients.keys())}'
-    
+
         except smtplib.SMTPResponseException as e:
-            logging.error(f"SMTP response exception: {e.smtp_code} {e.smtp_error}")
+            logging.error(
+                f"SMTP response exception: {e.smtp_code} {e.smtp_error}")
             return f"{e.smtp_code} {e.smtp_error}"
         else:
             logging.info("Successfully handled DATA command")

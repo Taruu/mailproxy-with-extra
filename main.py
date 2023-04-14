@@ -110,7 +110,7 @@ with open(config_path, "r") as f: #Use context manager  to automatically close t
     local_handler = LocalSmtpHandler()
     local_handler.load_users(config)
 
-    if config.getboolean("local", "use_utf8") == True:
+    if config.getboolean("local", "use_utf8"):
         controller = UTF8Controller(
             local_handler,
             hostname=config.get("local", "host"),

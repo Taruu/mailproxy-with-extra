@@ -11,6 +11,7 @@ from user_handlers import SmtpHandler, ImapHandler, MailUser
 from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import SMTP as SMTPServer
 
+
 class LocalSmtpHandler:
     """Class for handling SMTP requests from local server"""
 
@@ -62,7 +63,7 @@ class LocalSmtpHandler:
         try:
             mail_user = self.mail_users[email_from]
         except KeyError:
-            logging.error(f"Error: From {email_from} not in config file")            # noqa: E501 # pylint: disable=line-too-long # noqa: E501 # p
+            logging.error(f"Error: From {email_from} not in config file")
             return "550 User not found"
         try:
             mail_user.smtp_handler.implement_email(emails_to, content)
@@ -78,7 +79,7 @@ class LocalSmtpHandler:
         """ else:
             logging.info("250 Message accepted for delivery")
             return "250 OK" """
-            
+
         if refused_recipients:
             return f"553 Recipients refused: {refused_recipients}"
         else:
@@ -102,7 +103,7 @@ if __name__ == "__main__":
     if not Path(config_path).exists():
         raise OSError(f"Config file not found: {config_path}")
 
-with open(config_path, "r") as f: #Use context manager  to automatically close the file after reading
+with open(config_path, "r") as f:  # Use context manager  to automatically close the file after reading
     config = configparser.ConfigParser()
     config.read_file(f)
 
@@ -118,8 +119,8 @@ with open(config_path, "r") as f: #Use context manager  to automatically close t
     else:
         controller = Controller(
             local_handler,
-            hostname=config.get('local', 'host'),
-            port=config.getint('local', 'port')
+            hostname=config.get("local", "host"),
+            port=config.getint("local", "port"),
         )
 
     controller.start()

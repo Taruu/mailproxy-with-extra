@@ -36,6 +36,7 @@ class LocalSmtpHandler:
 
         loaded_users: Dict[str, MailUser] = {}
         for email in list_emails:
+            # TODO replace try by if and logging
             try:
                 smtp_handler = SmtpHandler.load_smtp(config, email)
                 imap_handler = ImapHandler.load_imap(config, email)
@@ -79,6 +80,7 @@ class LocalSmtpHandler:
             logging.error(f"Error: From {email_from} not in config file")
             return "550 User not found"
         try:
+            #TODO check before call
             mail_user.smtp_handler.implement_email(emails_to, content)
             mail_user.imap_handler.implement_email(emails_to, content)
 

@@ -41,7 +41,7 @@ class LocalSmtpHandler:
 
         self.mail_users = loaded_users
 
-    async def handle_data(self, server, session, envelope) -> str:
+    async def handle_data(self, server: SMTPServer, session: object, envelope: object) -> str:
         """Handle DATA command from SMTP server.
 
         Args:

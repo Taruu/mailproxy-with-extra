@@ -26,7 +26,6 @@ class SmtpHandler:
 
     @staticmethod
     def load_smtp(config: configparser.ConfigParser, email: str):
-        # TODO if config not correct or full message!
         key_value = f"smtp_{email}"
         try:
             host = config.get(key_value, "host")

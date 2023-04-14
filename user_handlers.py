@@ -2,6 +2,7 @@ import configparser
 import smtplib
 import imaplib
 from time import time
+import logging
 
 
 class SmtpHandler:
@@ -27,16 +28,30 @@ class SmtpHandler:
     def load_smtp(config: configparser.ConfigParser, email: str):
         # TODO if config not correct or full message!
         key_value = f"smtp_{email}"
+        try:
+            host = config.get(key_value, "host")
+            port = config.getint(key_value, "port")
+            # user - not need ?
+            password = config.get(key_value, "password")
+            use_ssl = config.getboolean(key_value, "use_ssl")
+            start_tls = config.getboolean(key_value, "start_tls")
+        except ValueError as e:
+            logging.error(f"Invalid value found for a variable {e}.")
+            return None
+        except configparser.NoOptionError as e:
+            logging.error(f"No option {e.option} found in section {e.section}.")
+            return None
+        except configparser.NoSectionError as e:
+            logging.error(f"Section {e.section} not found.")
+            return None
+        except configparser.ParsingError:
+            logging.error("Error while parsing the configuration file.")
+            return None
+        
+        return SmtpHandler(host, port, email, password, use_ssl, start_tls)
 
-        host = config.get(key_value, "host")
-        port = config.getint(key_value, "port")
-        # user - not need ?
-        password = config.get(key_value, "password")
-        use_ssl = config.getboolean(key_value, "use_ssl")
-        start_ssl = config.getboolean(key_value, "start_tls")
 
-        # TODO return None if config not correct or not exist
-        return SmtpHandler(host, port, email, password, use_ssl, start_ssl)
+        
 
     def implement_email(self, rcpt_tos, original_content: bytes):
         # TODO all exception handler!!!
@@ -82,18 +97,29 @@ class ImapHandler:
 
     @staticmethod
     def load_imap(config: configparser.ConfigParser, email: str):
-        # TODO if config not correct or full message!
         key_value = f"imap_{email}"
-
-        host = config.get(key_value, "host")
-        port = config.getint(key_value, "port")
-        # user - not need ?
-        password = config.get(key_value, "password")
-        use_ssl = config.getboolean(key_value, "use_ssl")
-        folder = config.get(key_value, "folder").strip()
-
-        # TODO return None if config not correct or not exist
+        try:
+            host = config.get(key_value, "host")
+            port = config.getint(key_value, "port")
+            # user - not need ?
+            password = config.get(key_value, "password")
+            use_ssl = config.getboolean(key_value, "use_ssl")
+            folder = config.get(key_value, "folder").strip()
+        except ValueError as e:
+            print(f"Invalid value found for a variable {e}.")
+            return None
+        except configparser.NoOptionError as e:
+            print(f"No option {e.option} found in section {e.section}.")
+            return None
+        except configparser.NoSectionError as e:
+            print(f"Section {e.section} not found.")
+            return None
+        except configparser.ParsingError:
+            print("Error while parsing the configuration file.")
+            return None
+        
         return ImapHandler(host, port, email, password, use_ssl, folder)
+        
 
     def implement_email(self, rcpt_tos, original_content: bytes):
         # TODO all exception handler!!!

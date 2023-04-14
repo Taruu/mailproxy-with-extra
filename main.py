@@ -11,6 +11,9 @@ from user_handlers import SmtpHandler, ImapHandler, MailUser
 from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import SMTP as SMTPServer
 
+logging.getLogger().setLevel(logging.INFO)
+
+logging.info("Starting program...")
 
 class LocalSmtpHandler:
     """Class for handling SMTP requests from local server"""
@@ -25,7 +28,9 @@ class LocalSmtpHandler:
             config (configparser.ConfigParser): Config file
         """
         try:
-            list_emails = config.get("local", "email_list").split(",")
+            list_emails = config.get("local", "email_list").replace(" ", "").split(",")
+            logging.info("Loaded users from config file")
+            logging.debug(f"Loaded users from config file {list_emails}")
         except (configparser.NoOptionError, configparser.NoSectionError) as e:
             raise ValueError(f"Error reading config file: {e}") from e
 
@@ -34,11 +39,20 @@ class LocalSmtpHandler:
             try:
                 smtp_handler = SmtpHandler.load_smtp(config, email)
                 imap_handler = ImapHandler.load_imap(config, email)
-                temp_mail_user = MailUser(email, smtp_handler, imap_handler)
-                loaded_users[email] = temp_mail_user
-            except Exception as e:
-                raise ValueError(f"Error while loading user: {e}") from e
-
+                if smtp_handler is None and imap_handler is None:
+                    raise ValueError
+                elif smtp_handler is None:
+                    logging.warning(f"SMTP handler missing for {email}. Program will continue.")
+                    continue
+                elif imap_handler is None:
+                    logging.warning(f"IMAP handler missing for {email}. Program will continue")
+                    continue
+                else:
+                    temp_mail_user = MailUser(email, smtp_handler, imap_handler)
+                    loaded_users[email] = temp_mail_user
+            except ValueError:
+                logging.error(f"No SMTP and IMAP handlers found for email {email}. Exiting program.")
+                sys.exit(1)
         self.mail_users = loaded_users
 
     async def handle_data(self, server: SMTPServer, session: object, envelope: object) -> str:
@@ -104,6 +118,7 @@ if not Path(config_path).exists():
 with open(config_path, "r") as f:  # Use context manager  to automatically close the file after reading
     config = configparser.ConfigParser()
     config.read_file(f)
+    logging.info("Config Loaded")
 
 if __name__ == "__main__":
     local_handler = LocalSmtpHandler()
@@ -121,8 +136,13 @@ if __name__ == "__main__":
             hostname=config.get("local", "host"),
             port=config.getint("local", "port"),
         )
-
-    controller.start()
-    while controller.loop.is_running():
-        sleep(0.2)  # TODO Нам эта фигня точно нужна? 
-                    # Да, нужна иначе проц в 100% сжирает
+    try:
+        controller.start()
+        logging.info("Server started.")
+        while controller.loop.is_running():
+            sleep(0.2)  # TODO Нам эта фигня точно нужна? 
+                        # Да, нужна иначе проц в 100% сжирает
+    except KeyboardInterrupt:
+        controller.stop()
+        logging.info("Exiting")
+        

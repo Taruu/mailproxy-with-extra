@@ -23,7 +23,6 @@ class LocalSmtpHandler:
 
         Args:
             config (configparser.ConfigParser): Config file
-
         """
         try:
             list_emails = config.get("local", "email_list").split(",")
@@ -125,4 +124,5 @@ with open(config_path, "r") as f:  # Use context manager  to automatically close
 
     controller.start()
     while controller.loop.is_running():
-        sleep(0.2)  # TODO Нам эта фигня точно нужна?
+        sleep(0.2)  # TODO Нам эта фигня точно нужна? 
+                    # Да, нужна иначе проц в 100% сжирает

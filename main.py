@@ -94,18 +94,18 @@ class UTF8Controller(Controller):
         return SMTPServer(self.handler, decode_data=True, enable_SMTPUTF8=True)
 
 
-if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        config_path = sys.argv[1]
-    else:
-        config_path = Path(sys.path[0]) / "config.ini"
-    if not Path(config_path).exists():
-        raise OSError(f"Config file not found: {config_path}")
+if len(sys.argv) == 2:
+    config_path = sys.argv[1]
+else:
+    config_path = Path(sys.path[0]) / "config.ini"
+if not Path(config_path).exists():
+    raise OSError(f"Config file not found: {config_path}")
 
 with open(config_path, "r") as f:  # Use context manager  to automatically close the file after reading
     config = configparser.ConfigParser()
     config.read_file(f)
 
+if __name__ == "__main__":
     local_handler = LocalSmtpHandler()
     local_handler.load_users(config)
 

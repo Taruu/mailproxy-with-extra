@@ -64,7 +64,7 @@ class LocalSmtpHandler:
             logging.error(f"SMTP response exception: {e.smtp_code} {e.smtp_error}")
             return f"{e.smtp_code} {e.smtp_error}"
         else:
-            logging.info(f"Successfully handled DATA command")
+            logging.info("Successfully handled DATA command")
             return "250 OK"
 
 

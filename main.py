@@ -1,12 +1,11 @@
 import configparser
 import aiosmtpd
-import smtplib
 import sys
 from pathlib import Path
 from time import sleep
 import logging
 from typing import Dict, List
-from typing import Dict, List
+
 
 from user_handlers import SmtpHandler, ImapHandler, MailUser
 from aiosmtpd.controller import Controller

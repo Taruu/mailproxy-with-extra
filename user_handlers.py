@@ -10,13 +10,13 @@ class SmtpHandler:
     """Параметры для авторизации по smtp"""
 
     def __init__(
-            self,
-            host: str,
-            port: int,
-            user: str,
-            password: str,
-            use_ssl=False,
-            start_tls=False,
+        self,
+        host: str,
+        port: int,
+        user: str,
+        password: str,
+        use_ssl: bool = False,
+        start_tls: bool = False,
     ):
         self._host = host
         self._port = port
@@ -50,7 +50,7 @@ class SmtpHandler:
 
         return SmtpHandler(host, port, email, password, use_ssl, start_tls)
 
-    def implement_email(self, rcpt_tos: List[str], original_content: bytes):
+    def send_email(self, rcpt_tos: List[str], original_content: bytes):
         # TODO all exception handler!!!
         # TODO test session place in self context
         if self._use_ssl:
@@ -68,33 +68,35 @@ class SmtpHandler:
         refused_recipients = {}
         try:
             # TODO check before call
-            refused_recipients = session.sendmail(self._user, rcpt_tos,
-                                                  original_content)
-        except smtplib.SMTPRecipientsRefused as e:
-            logging.error(
-                f"Recipients refused: {' '.join(refused_recipients.keys())}")
+            refused_recipients = session.sendmail(
+                self._user, rcpt_tos, original_content
+            )
+        except smtplib.SMTPRecipientsRefused:
+            logging.error(f"Recipients refused: {' '.join(refused_recipients.keys())}")
             return f'553 Recipients refused {"".join(refused_recipients.keys())}'
 
         except smtplib.SMTPResponseException as e:
-            logging.error(
-                f"SMTP response exception: {e.smtp_code} {e.smtp_error}")
+            logging.error(f"SMTP response exception: {e.smtp_code} {e.smtp_error}")
             return f"{e.smtp_code} {e.smtp_error}"
+
+        except Exception as e:
+            logging.error(f"Exception while implementing email using SMTP: {str(e)}")
+
         finally:
             # need only quit?
             session.quit()
-
 
 class ImapHandler:
     """Параметры для авторизации Imap"""
 
     def __init__(
-            self,
-            host: str,
-            port: int,
-            user: str,
-            password: str,
-            use_ssl=False,
-            folder="Sent",
+        self,
+        host: str,
+        port: int,
+        user: str,
+        password: str,
+        use_ssl: bool = False,
+        folder="Sent",
     ):
         self._host = host
         self._port = port
@@ -114,21 +116,21 @@ class ImapHandler:
             use_ssl = config.getboolean(key_value, "use_ssl")
             folder = config.get(key_value, "folder").strip()
         except ValueError as e:
-            print(f"Invalid value found for a variable {e}.")
+            logging.error(f"Invalid value found for a variable {e}.")
             return None
         except configparser.NoOptionError as e:
-            print(f"No option {e.option} found in section {e.section}.")
+            logging.error(f"No option {e.option} found in section {e.section}.")
             return None
         except configparser.NoSectionError as e:
-            print(f"Section {e.section} not found.")
+            logging.error(f"Section {e.section} not found.")
             return None
         except configparser.ParsingError:
-            print("Error while parsing the configuration file.")
+            logging.error("Error while parsing the configuration file.")
             return None
 
         return ImapHandler(host, port, email, password, use_ssl, folder)
 
-    def implement_email(self, rcpt_tos, original_content: bytes):
+    def store_email(self, rcpt_tos: List[str], original_content: bytes):
         # TODO all exception handler!!!
         # TODO test session place in self context
         if self._use_ssl:
@@ -140,20 +142,18 @@ class ImapHandler:
 
         value = original_content
         # TODO folder to config
-        res = session.append(self._folder, "",
-                             imaplib.Time2Internaldate(time()), value)
+        res = session.append(self._folder, "", imaplib.Time2Internaldate(time()), value)
         try:
             pass
         except Exception as var_error:
-            print(var_error)
+            logging.error(var_error)
         finally:
             session.logout()
 
 
 class MailUser:
     def __init__(
-            self, login: str, smtp_handler: SmtpHandler,
-            imap_handler: ImapHandler
+        self, login: str, smtp_handler: SmtpHandler, imap_handler: ImapHandler
     ):
         self.login = login
         self.smtp_handler = smtp_handler

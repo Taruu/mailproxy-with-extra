@@ -21,7 +21,8 @@ class LocalSmtpHandler:
 
     def __init__(self):
         self.mail_users: Dict[
-            str, MailUser] = {}  # dict of users with username and handler for each user.
+            str, MailUser
+        ] = {}  # dict of users with username and handler for each user.
 
     def load_users(self, config: configparser.ConfigParser) -> None:
         """Loads users from config file
@@ -30,9 +31,7 @@ class LocalSmtpHandler:
             config (configparser.ConfigParser): Config file
         """
         try:
-            list_emails = config.get("local", "email_list").replace(" ",
-                                                                    "").split(
-                ",")
+            list_emails = config.get("local", "email_list").replace(" ", "").split(",")
             logging.info("Loaded users from config file")
             logging.debug(f"Loaded users from config file {list_emails}")
         except (configparser.NoOptionError, configparser.NoSectionError) as e:
@@ -48,23 +47,27 @@ class LocalSmtpHandler:
                     raise ValueError
                 elif smtp_handler is None:
                     logging.warning(
-                        f"SMTP handler missing for {email}. Program will continue.")
+                        f"SMTP handler missing for {email}. Program will continue."
+                    )
                     continue
                 elif imap_handler is None:
                     logging.warning(
-                        f"IMAP handler missing for {email}. Program will continue")
+                        f"IMAP handler missing for {email}. Program will continue"
+                    )
                     continue
 
                 temp_mail_user = MailUser(email, smtp_handler, imap_handler)
                 loaded_users[email] = temp_mail_user
             except ValueError:
                 logging.error(
-                    f"No SMTP and IMAP handlers found for email {email}. Exiting program.")
+                    f"No SMTP and IMAP handlers found for email {email}. Exiting program."
+                )
                 sys.exit(1)
         self.mail_users = loaded_users
 
-    async def handle_data(self, server: SMTPServer, session: object,
-                          envelope: Envelope) -> str:
+    async def handle_data(
+        self, server: SMTPServer, session: object, envelope: Envelope
+    ) -> str:
         """Handle DATA command from SMTP server.
 
         Args:
@@ -89,9 +92,9 @@ class LocalSmtpHandler:
             return "550 User not found"
 
         if mail_user.smtp_handler:
-            mail_user.smtp_handler.implement_email(emails_to, content)
+            mail_user.smtp_handler.send_email(emails_to, content)
         if mail_user.imap_handler:
-            mail_user.imap_handler.implement_email(emails_to, content)
+            mail_user.imap_handler.store_email(emails_to, content)
 
         """ else:
             logging.info("250 Message accepted for delivery")
@@ -119,8 +122,9 @@ else:
 if not Path(config_path).exists():
     raise OSError(f"Config file not found: {config_path}")
 
-with open(config_path,
-          "r") as f:  # Use context manager  to automatically close the file after reading
+with open(
+    config_path, "r"
+) as f:  # Use context manager  to automatically close the file after reading
     config = configparser.ConfigParser()
     config.read_file(f)
     logging.info("Config Loaded")
@@ -145,7 +149,7 @@ if __name__ == "__main__":
         controller.start()
         logging.info("Server started.")
         while controller.loop.is_running():
-            sleep(0.2)  # TODO Нам эта фигня точно нужна? 
+            sleep(0.2)  # TODO Нам эта фигня точно нужна?
             # Да, нужна иначе проц в 100% сжирает
     except KeyboardInterrupt:
         controller.stop()

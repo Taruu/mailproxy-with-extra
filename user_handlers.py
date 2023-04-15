@@ -3,19 +3,20 @@ import smtplib
 import imaplib
 from time import time
 import logging
+from typing import List
 
 
 class SmtpHandler:
     """Параметры для авторизации по smtp"""
 
     def __init__(
-        self,
-        host: str,
-        port: int,
-        user: str,
-        password: str,
-        use_ssl=False,
-        start_tls=False,
+            self,
+            host: str,
+            port: int,
+            user: str,
+            password: str,
+            use_ssl=False,
+            start_tls=False,
     ):
         self._host = host
         self._port = port
@@ -46,13 +47,10 @@ class SmtpHandler:
         except configparser.ParsingError:
             logging.error("Error while parsing the configuration file.")
             return None
-        
+
         return SmtpHandler(host, port, email, password, use_ssl, start_tls)
 
-
-        
-
-    def implement_email(self, rcpt_tos, original_content: bytes):
+    def implement_email(self, rcpt_tos: List[str], original_content: bytes):
         # TODO all exception handler!!!
         # TODO test session place in self context
         if self._use_ssl:
@@ -66,10 +64,21 @@ class SmtpHandler:
 
         if self._user and self._password:
             session.login(self._user, self._password)
+
+        refused_recipients = {}
         try:
-            session.sendmail(self._user, rcpt_tos, original_content)
-        except Exception as var_error:
-            Exception(var_error)
+            # TODO check before call
+            refused_recipients = session.sendmail(self._user, rcpt_tos,
+                                                  original_content)
+        except smtplib.SMTPRecipientsRefused as e:
+            logging.error(
+                f"Recipients refused: {' '.join(refused_recipients.keys())}")
+            return f'553 Recipients refused {"".join(refused_recipients.keys())}'
+
+        except smtplib.SMTPResponseException as e:
+            logging.error(
+                f"SMTP response exception: {e.smtp_code} {e.smtp_error}")
+            return f"{e.smtp_code} {e.smtp_error}"
         finally:
             # need only quit?
             session.quit()
@@ -79,13 +88,13 @@ class ImapHandler:
     """Параметры для авторизации Imap"""
 
     def __init__(
-        self,
-        host: str,
-        port: int,
-        user: str,
-        password: str,
-        use_ssl=False,
-        folder="Sent",
+            self,
+            host: str,
+            port: int,
+            user: str,
+            password: str,
+            use_ssl=False,
+            folder="Sent",
     ):
         self._host = host
         self._port = port
@@ -116,9 +125,8 @@ class ImapHandler:
         except configparser.ParsingError:
             print("Error while parsing the configuration file.")
             return None
-        
+
         return ImapHandler(host, port, email, password, use_ssl, folder)
-        
 
     def implement_email(self, rcpt_tos, original_content: bytes):
         # TODO all exception handler!!!
@@ -132,7 +140,8 @@ class ImapHandler:
 
         value = original_content
         # TODO folder to config
-        res = session.append(self._folder, "", imaplib.Time2Internaldate(time()), value)
+        res = session.append(self._folder, "",
+                             imaplib.Time2Internaldate(time()), value)
         try:
             pass
         except Exception as var_error:
@@ -143,7 +152,8 @@ class ImapHandler:
 
 class MailUser:
     def __init__(
-        self, login: str, smtp_handler: SmtpHandler, imap_handler: ImapHandler
+            self, login: str, smtp_handler: SmtpHandler,
+            imap_handler: ImapHandler
     ):
         self.login = login
         self.smtp_handler = smtp_handler

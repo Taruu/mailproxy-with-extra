@@ -6,20 +6,22 @@ from time import sleep
 import logging
 from typing import Dict, List
 
-
 from user_handlers import SmtpHandler, ImapHandler, MailUser
 from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import SMTP as SMTPServer
+from aiosmtpd.smtp import Envelope
 
 logging.getLogger().setLevel(logging.INFO)
 
 logging.info("Starting program...")
 
+
 class LocalSmtpHandler:
     """Class for handling SMTP requests from local server"""
 
     def __init__(self):
-        self.mail_users: Dict[str, MailUser] = {}  # dict of users with username and handler for each user.
+        self.mail_users: Dict[
+            str, MailUser] = {}  # dict of users with username and handler for each user.
 
     def load_users(self, config: configparser.ConfigParser) -> None:
         """Loads users from config file
@@ -28,7 +30,9 @@ class LocalSmtpHandler:
             config (configparser.ConfigParser): Config file
         """
         try:
-            list_emails = config.get("local", "email_list").replace(" ", "").split(",")
+            list_emails = config.get("local", "email_list").replace(" ",
+                                                                    "").split(
+                ",")
             logging.info("Loaded users from config file")
             logging.debug(f"Loaded users from config file {list_emails}")
         except (configparser.NoOptionError, configparser.NoSectionError) as e:
@@ -43,20 +47,24 @@ class LocalSmtpHandler:
                 if smtp_handler is None and imap_handler is None:
                     raise ValueError
                 elif smtp_handler is None:
-                    logging.warning(f"SMTP handler missing for {email}. Program will continue.")
+                    logging.warning(
+                        f"SMTP handler missing for {email}. Program will continue.")
                     continue
                 elif imap_handler is None:
-                    logging.warning(f"IMAP handler missing for {email}. Program will continue")
+                    logging.warning(
+                        f"IMAP handler missing for {email}. Program will continue")
                     continue
-                else:
-                    temp_mail_user = MailUser(email, smtp_handler, imap_handler)
-                    loaded_users[email] = temp_mail_user
+
+                temp_mail_user = MailUser(email, smtp_handler, imap_handler)
+                loaded_users[email] = temp_mail_user
             except ValueError:
-                logging.error(f"No SMTP and IMAP handlers found for email {email}. Exiting program.")
+                logging.error(
+                    f"No SMTP and IMAP handlers found for email {email}. Exiting program.")
                 sys.exit(1)
         self.mail_users = loaded_users
 
-    async def handle_data(self, server: SMTPServer, session: object, envelope: object) -> str:
+    async def handle_data(self, server: SMTPServer, session: object,
+                          envelope: Envelope) -> str:
         """Handle DATA command from SMTP server.
 
         Args:
@@ -79,18 +87,12 @@ class LocalSmtpHandler:
         except KeyError:
             logging.error(f"Error: From {email_from} not in config file")
             return "550 User not found"
-        try:
-            #TODO check before call
+
+        if mail_user.smtp_handler:
             mail_user.smtp_handler.implement_email(emails_to, content)
+        if mail_user.imap_handler:
             mail_user.imap_handler.implement_email(emails_to, content)
 
-        except aiosmtpd.SMTPRecipientsRefused as e:
-            logging.error(f"Recipients refused: {' '.join(refused_recipients.keys())}")
-            return f'553 Recipients refused {"".join(refused_recipients.keys())}'
-
-        except aiosmtpd.SMTPResponseException as e:
-            logging.error(f"SMTP response exception: {e.smtp_code} {e.smtp_error}")
-            return f"{e.smtp_code} {e.smtp_error}"
         """ else:
             logging.info("250 Message accepted for delivery")
             return "250 OK" """
@@ -117,7 +119,8 @@ else:
 if not Path(config_path).exists():
     raise OSError(f"Config file not found: {config_path}")
 
-with open(config_path, "r") as f:  # Use context manager  to automatically close the file after reading
+with open(config_path,
+          "r") as f:  # Use context manager  to automatically close the file after reading
     config = configparser.ConfigParser()
     config.read_file(f)
     logging.info("Config Loaded")
@@ -143,8 +146,7 @@ if __name__ == "__main__":
         logging.info("Server started.")
         while controller.loop.is_running():
             sleep(0.2)  # TODO Нам эта фигня точно нужна? 
-                        # Да, нужна иначе проц в 100% сжирает
+            # Да, нужна иначе проц в 100% сжирает
     except KeyboardInterrupt:
         controller.stop()
         logging.info("Exiting")
-        

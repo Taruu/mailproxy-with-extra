@@ -148,11 +148,10 @@ if __name__ == "__main__":
     try:
         controller.start()
         logging.info("Server started.")
-        controller.loop.run_forever()
         while controller.loop.is_running():
+            sleep(0.2)
             # go main thread to sleep...
             # maybe need fix?
-            sleep(0.2)
 
     except KeyboardInterrupt:
         controller.stop()

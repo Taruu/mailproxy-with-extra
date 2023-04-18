@@ -5,7 +5,7 @@ from pathlib import Path
 from time import sleep
 import logging
 from typing import Dict, List
-
+import asyncio
 from user_handlers import SmtpHandler, ImapHandler, MailUser
 from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import SMTP as SMTPServer
@@ -68,7 +68,7 @@ class LocalSmtpHandler:
                 sys.exit(1)
         self.mail_users = loaded_users
 
-    async def handle_data(
+    async def handle_DATA(
             self, server: SMTPServer,
             session: object,
             envelope: Envelope) -> str:
@@ -83,7 +83,6 @@ class LocalSmtpHandler:
             str: Response code
 
         """
-
         email_from: str = envelope.mail_from
         emails_to: List[str] = envelope.rcpt_tos
         content: bytes = envelope.original_content
@@ -94,6 +93,9 @@ class LocalSmtpHandler:
         except KeyError:
             logging.error(f"Error: From {email_from} not in config file")
             return "550 User not found"
+
+        logging.debug(mail_user.smtp_handler)
+        logging.debug(mail_user.imap_handler)
 
         if mail_user.smtp_handler:
             mail_user.smtp_handler.send_email(emails_to, content)
@@ -145,8 +147,10 @@ if __name__ == "__main__":
             hostname=config.get("local", "host"),
             port=config.getint("local", "port"),
         )
+    print(type(controller))
+    controller.start()
     try:
-        controller.start()
+
         logging.info("Server started.")
         while controller.loop.is_running():
             sleep(0.2)

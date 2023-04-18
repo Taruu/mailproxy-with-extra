@@ -67,13 +67,13 @@ class SmtpHandler:
 
     def send_email(self, rcpt_tos: List[str], original_content: bytes):
         """
-
         @param rcpt_tos: list emails to receive emails.
         @param original_content: letter content
         @return:
         """
 
         # TODO test session place in self context?
+
         if self._use_ssl:
             session = smtplib.SMTP_SSL(self._host, self._port)
         else:
@@ -104,10 +104,8 @@ class SmtpHandler:
         except Exception as e:
             logging.error(
                 f"Exception while implementing email using SMTP: {str(e)}")
+        session.quit()
 
-        finally:
-            # need only quit?
-            session.quit()
 
 
 class ImapHandler:
@@ -182,12 +180,11 @@ class ImapHandler:
         try:
             session.append(self._folder, "",
                            imaplib.Time2Internaldate(time()), value)
+
         except Exception as e:
             logging.error(
                 f"Exception while append email using IMAP: {str(e)}")
-        finally:
-            session.logout()
-
+        session.logout()
 
 class MailUser:
     def __init__(

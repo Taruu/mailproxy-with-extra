@@ -31,9 +31,12 @@ class LocalSmtpHandler:
             config (configparser.ConfigParser): Config file
         """
         try:
-            list_emails = config.get("local", "email_list").replace(" ", "").split(",")
+            list_emails = config.get("local", "email_list"). \
+                replace(" ", "").split(",")
+
             logging.info("Loaded users from config file")
             logging.debug(f"Loaded users from config file {list_emails}")
+
         except (configparser.NoOptionError, configparser.NoSectionError) as e:
             raise ValueError(f"Error reading config file: {e}") from e
 
@@ -41,20 +44,20 @@ class LocalSmtpHandler:
         for email in list_emails:
             # TODO replace try by if and logging
             try:
+
                 smtp_handler = SmtpHandler.load_smtp(config, email)
                 imap_handler = ImapHandler.load_imap(config, email)
+
                 if smtp_handler is None and imap_handler is None:
                     raise ValueError
                 elif smtp_handler is None:
                     logging.warning(
                         f"SMTP handler missing for {email}. Program will continue."
                     )
-                    continue
                 elif imap_handler is None:
                     logging.warning(
                         f"IMAP handler missing for {email}. Program will continue"
                     )
-                    continue
 
                 temp_mail_user = MailUser(email, smtp_handler, imap_handler)
                 loaded_users[email] = temp_mail_user
@@ -66,10 +69,11 @@ class LocalSmtpHandler:
         self.mail_users = loaded_users
 
     async def handle_data(
-        self, server: SMTPServer, session: object, envelope: Envelope
-    ) -> str:
+            self, server: SMTPServer,
+            session: object,
+            envelope: Envelope) -> str:
         """Handle DATA command from SMTP server.
-
+        #TODO check this tech  aiosmtpd.handlers.Proxy
         Args:
             server (object): SMTP server object
             session (object): SMTP session object
@@ -94,11 +98,7 @@ class LocalSmtpHandler:
         if mail_user.smtp_handler:
             mail_user.smtp_handler.send_email(emails_to, content)
         if mail_user.imap_handler:
-            mail_user.imap_handler.store_email(emails_to, content)
-
-        """ else:
-            logging.info("250 Message accepted for delivery")
-            return "250 OK" """
+            mail_user.imap_handler.store_email(content)
 
         if refused_recipients:
             return f"553 Recipients refused: {refused_recipients}"
@@ -123,7 +123,7 @@ if not Path(config_path).exists():
     raise OSError(f"Config file not found: {config_path}")
 
 with open(
-    config_path, "r"
+        config_path, "r"
 ) as f:  # Use context manager  to automatically close the file after reading
     config = configparser.ConfigParser()
     config.read_file(f)
@@ -148,9 +148,12 @@ if __name__ == "__main__":
     try:
         controller.start()
         logging.info("Server started.")
+        controller.loop.run_forever()
         while controller.loop.is_running():
-            sleep(0.2)  # TODO Нам эта фигня точно нужна?
-            # Да, нужна иначе проц в 100% сжирает
+            # go main thread to sleep...
+            # maybe need fix?
+            sleep(0.2)
+
     except KeyboardInterrupt:
         controller.stop()
         logging.info("Exiting")

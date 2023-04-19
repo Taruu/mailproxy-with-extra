@@ -1,17 +1,16 @@
 import configparser
-import aiosmtpd
 import sys
 from pathlib import Path
 from time import sleep
 import logging
 from typing import Dict, List
-import asyncio
 from user_handlers import SmtpHandler, ImapHandler, MailUser
 from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import SMTP as SMTPServer
 from aiosmtpd.smtp import Envelope
+from log_manager import LogManager
 
-logging.getLogger().setLevel(logging.INFO)
+logging.getLogger()
 
 logging.info("Starting program...")
 
@@ -31,8 +30,7 @@ class LocalSmtpHandler:
             config (configparser.ConfigParser): Config file
         """
         try:
-            list_emails = config.get("local", "email_list"). \
-                replace(" ", "").split(",")
+            list_emails = config.get("local", "email_list").replace(" ", "").split(",")
 
             logging.info("Loaded users from config file")
             logging.debug(f"Loaded users from config file {list_emails}")
@@ -42,9 +40,9 @@ class LocalSmtpHandler:
 
         loaded_users: Dict[str, MailUser] = {}
         for email in list_emails:
+            
             # TODO replace try by if and logging
             try:
-
                 smtp_handler = SmtpHandler.load_smtp(config, email)
                 imap_handler = ImapHandler.load_imap(config, email)
 
@@ -69,9 +67,8 @@ class LocalSmtpHandler:
         self.mail_users = loaded_users
 
     async def handle_DATA(
-            self, server: SMTPServer,
-            session: object,
-            envelope: Envelope) -> str:
+        self, server: SMTPServer, session: object, envelope: Envelope
+    ) -> str:
         """Handle DATA command from SMTP server.
         #TODO check this tech  aiosmtpd.handlers.Proxy
         Args:
@@ -117,6 +114,7 @@ class UTF8Controller(Controller):
         return SMTPServer(self.handler, decode_data=True, enable_SMTPUTF8=True)
 
 
+"""Config Init"""
 if len(sys.argv) == 2:
     config_path = sys.argv[1]
 else:
@@ -125,11 +123,18 @@ if not Path(config_path).exists():
     raise OSError(f"Config file not found: {config_path}")
 
 with open(
-        config_path, "r"
+    config_path, "r"
 ) as f:  # Use context manager  to automatically close the file after reading
     config = configparser.ConfigParser()
     config.read_file(f)
     logging.info("Config Loaded")
+
+log_manager = LogManager(
+    level=config.getint("logging", "level"),
+    formatter="%(asctime)s -%(levelname)s -%(message)s",
+    filename=config.get("logging", "filename"),
+    filemode=config.get("logging", "filemode"),
+)
 
 if __name__ == "__main__":
     local_handler = LocalSmtpHandler()
@@ -148,9 +153,8 @@ if __name__ == "__main__":
             port=config.getint("local", "port"),
         )
     logging.debug(type(controller))
-    controller.start()
     try:
-
+        controller.start()
         logging.info("Server started.")
         while controller.loop.is_running():
             sleep(0.2)
@@ -160,3 +164,10 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         controller.stop()
         logging.info("Exiting")
+    except OSError as e:
+        if e.winerror == 10049 and controller.hostname == "0.0.0.0":
+            host_in_config = config.get("local", "host")
+            logging.error(
+                f"Invalid host in config! Host in config: {host_in_config} Closing program..."
+            )
+            sys.exit(1)

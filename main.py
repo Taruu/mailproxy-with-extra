@@ -147,7 +147,7 @@ if __name__ == "__main__":
             hostname=config.get("local", "host"),
             port=config.getint("local", "port"),
         )
-    print(type(controller))
+    logging.debug(type(controller))
     controller.start()
     try:
 

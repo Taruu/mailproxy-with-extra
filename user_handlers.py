@@ -2,9 +2,13 @@ import configparser
 import smtplib
 import imaplib
 from time import time
-import logging
 from typing import List
 
+import logging
+import logging.config
+
+logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
+logger = logging.getLogger('main')
 
 class SmtpHandler:
     """Smtp handler"""
@@ -56,13 +60,13 @@ class SmtpHandler:
             return SmtpHandler(host, port, email, password, use_ssl, start_tls)
 
         except ValueError as e:
-            logging.error(f"Invalid value found for a variable {e}.")
+            logger.error(f"Invalid value found for a variable {e}.")
         except configparser.NoOptionError as e:
-            logging.error(f"No option {e.option} found in section {e.section}.")
+            logger.error(f"No option {e.option} found in section {e.section}.")
         except configparser.NoSectionError as e:
-            logging.error(f"Section {e.section} not found.")
+            logger.error(f"Section {e.section} not found.")
         except configparser.ParsingError:
-            logging.error("Error while parsing the configuration file.")
+            logger.error("Error while parsing the configuration file.")
         return None
 
     def send_email(self, rcpt_tos: List[str], original_content: bytes):
@@ -92,19 +96,20 @@ class SmtpHandler:
             refused_recipients = session.sendmail(
                 self._user, rcpt_tos, original_content
             )
+            return "250 Message accepted for delivery"
         except smtplib.SMTPRecipientsRefused:
-            logging.error(
+            logger.error(
                 f"Recipients refused: {' '.join(refused_recipients.keys())}")
             return f'553 Recipients refused {"".join(refused_recipients.keys())}'
-
         except smtplib.SMTPResponseException as e:
-            logging.error(
+            logger.error(
                 f"SMTP response exception: {e.smtp_code} {e.smtp_error}")
             return f"{e.smtp_code} {e.smtp_error}"
         except Exception as e:
-            logging.error(
+            logger.error(
                 f"Exception while implementing email using SMTP: {str(e)}")
-        session.quit()
+        finally:
+            session.quit()
 
 
 
@@ -150,15 +155,15 @@ class ImapHandler:
             return ImapHandler(host, port, email, password, use_ssl, folder)
 
         except ValueError as e:
-            logging.error(f"Invalid value found for a variable {e}.")
+            logger.error(f"Invalid value found for a variable {e}.")
         except configparser.NoOptionError as e:
-            logging.error(f"No option {e.option} found in section {e.section}.")
+            logger.error(f"No option {e.option} found in section {e.section}.")
         except configparser.NoSectionError as e:
-            logging.error(f"Section {e.section} not found.")
+            logger.error(f"Section {e.section} not found.")
         except configparser.ParsingError:
-            logging.error("Error while parsing the configuration file.")
+            logger.error("Error while parsing the configuration file.")
         except Exception as e:
-            logging.error(
+            logger.error(
                 f"Exception while implementing email using IMAP: {str(e)}")
         return None
 
@@ -173,18 +178,19 @@ class ImapHandler:
         try:
             session.login(self._user, self._password)
         except Exception as e:
-            logging.error(
+            logger.error(
                 f"Exception while login email using IMAP: {str(e)}")
 
         value = original_content
+
         try:
             session.append(self._folder, "",
                            imaplib.Time2Internaldate(time()), value)
-
         except Exception as e:
-            logging.error(
+            logger.error(
                 f"Exception while append email using IMAP: {str(e)}")
-        session.logout()
+        finally:
+            session.logout()
 
 class MailUser:
     def __init__(

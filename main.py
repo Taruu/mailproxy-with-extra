@@ -99,12 +99,12 @@ class LocalSmtpHandler:
         logger.debug(mail_user.smtp_handler)
         logger.debug(mail_user.imap_handler)
 
+        if mail_user.imap_handler:
+            mail_user.imap_handler.store_email(content)
         if mail_user.smtp_handler:
             smtp_reply = mail_user.smtp_handler.send_email(emails_to, content)
         else:
             smtp_reply = f"451 Message not sent because of server error"
-        if mail_user.imap_handler:
-            mail_user.imap_handler.store_email(content)
 
         logger.info(
             f"Success send mail form {email_from} to {emails_to}."

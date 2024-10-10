@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "mailproxy-with-extra"
+version = "0.1.0"
+description = ""
+authors = ["Taruu <taruumax@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiosmtpd = "^1.4.6"
+systemd-logging = "^1.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

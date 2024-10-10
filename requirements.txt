@@ -1,0 +1,5 @@
+aiosmtpd==1.4.6
+atpublic==5.0
+attrs==24.2.0
+ctyped==0.8.0
+systemd-logging==1.0.1
